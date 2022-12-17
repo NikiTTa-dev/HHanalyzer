@@ -1,3 +1,4 @@
+import pathlib
 from openpyxl import Workbook
 from openpyxl.styles import Font, Border, Side
 from openpyxl.styles.numbers import FORMAT_PERCENTAGE_00
@@ -192,6 +193,7 @@ class Report:
     years_count_vac = {}
     area_salary = {}
     area_count = {}
+    prof = ''
 
     def years_preparer(self, field: dict, value_name: str, dest: dict):
         for year in field.keys():
@@ -201,7 +203,7 @@ class Report:
         for name in names:
             dest[name] = getattr(field[name], value_name)
 
-    def prepare_data(self, years: dict, vacancies: dict, cities: dict):
+    def prepare_data(self, years: dict, vacancies: dict, cities: dict, prof: str):
         self.years_preparer(years, "totalSalary", self.years_salary)
         self.years_preparer(years, "count", self.years_count)
         self.years_preparer(vacancies, "totalSalary", self.years_salary_vac)
@@ -350,21 +352,23 @@ class Report:
     def generate_pdf(self):
         area_count_dic = self.area_count.items()
         area_count_dic = {x[0]: str(f'{x[1] * 100:,.2f}%').replace('.', ',') for x in area_count_dic}
-
-        image_file = "graph.png"
         env = Environment(loader=FileSystemLoader('.'))
         template = env.get_template("pdf_template.html")
         header_year = ["Год", "Средняя зарплата", "Средняя зарплата - Программист", "Количество вакансий",
                        "Количество вакансий - Программист"]
         header_city = ["Город", "Уровень зарплат", "Город", "Доля вакансий"]
-        pdf_template = template.render({'years_salary_dic': self.years_salary,
+        pdf_template = template.render({'prof': self.prof,
+                                        'years_salary_dic': self.years_salary,
                                         'years_count_dic': self.years_count,
                                         'years_salary_vac_dic': self.years_salary_vac,
-                                        'years_count_vac_dic': self.years_count_vac, 'area_salary_dic': self.area_salary,
-                                        'area_count_dic': area_count_dic, 'header_year': header_year,
-                                        'header_city': header_city, 'image_file': image_file})
+                                        'years_count_vac_dic': self.years_count_vac,
+                                        'area_salary_dic': self.area_salary,
+                                        'area_count_dic': area_count_dic,
+                                        'header_year': header_year,
+                                        'header_city': header_city,
+                                        'path': './graph.png'})
         config = pdfkit.configuration(wkhtmltopdf=r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe')
-        pdfkit.from_string(pdf_template, 'report.pdf', configuration=config)
+        pdfkit.from_string(pdf_template, 'report.pdf', configuration=config, options={"enable-local-file-access": None})
 
 
 inputer = InputConect()
@@ -375,6 +379,7 @@ inputer.count_vacancies(dataset.vacancies_objects)
 inputer.normalize_statistic()
 inputer.print_answer()
 reporter = Report()
-reporter.prepare_data(inputer.years, inputer.vacancies, inputer.cities)
+reporter.prepare_data(inputer.years, inputer.vacancies, inputer.cities, inputer.profession)
 reporter.generate_excel()
 reporter.generate_image()
+reporter.generate_pdf()
