@@ -160,7 +160,8 @@ class Vacancy:
         self.salary = Salary(object_vacancy['salary_from'][0], object_vacancy['salary_to'][0],
                              object_vacancy['salary_gross'][0], object_vacancy['salary_currency'][0])
         self.area_name = object_vacancy['area_name'][0]
-        self.published_at = datetime.datetime.strptime(object_vacancy['published_at'][0], '%Y-%m-%dT%H:%M:%S%z')
+        self.published_at = ".".join(reversed(object_vacancy['published_at'][0][:10].split("-")))
+            #datetime.datetime.strptime(object_vacancy['published_at'][0], '%Y-%m-%dT%H:%M:%S%z')
 
     def to_compare(self):
         """

@@ -50,7 +50,8 @@ class Vacancy:
         salary_to = int(float("".join(vac['salary_to'].split())))
         self.salary = (salary_from + salary_to) * self.currency_to_rub[vac['salary_currency']] // 2
         self.area_name = vac['area_name']
-        self.published_at = datetime.datetime.strptime(vac['published_at'], '%Y-%m-%dT%H:%M:%S%z')
+        self.published_at = ".".join(reversed(vac["published_at"][:10].split("-")))
+            #datetime.datetime.strptime(vac['published_at'], '%Y-%m-%dT%H:%M:%S%z')
 
 
 class DataSet:
@@ -197,7 +198,7 @@ class InputConect:
         """
         for vacancy in vacancies:
             self.city_count += 1
-            year = int(vacancy.published_at.year)
+            year = int(vacancy.published_at.split(".")[2])
             if year not in self.years.keys():
                 self.years[year] = MyTuple(vacancy.salary, 1)
                 self.vacancies[year] = MyTuple(0, 0)
