@@ -1,4 +1,3 @@
-
 from openpyxl import Workbook
 from openpyxl.styles import Font, Border, Side
 from openpyxl.styles.numbers import FORMAT_PERCENTAGE_00
@@ -11,6 +10,22 @@ import pdfkit
 
 
 class Vacancy:
+    """
+    Класс для описания вакансии
+
+    Atributes
+    ---------
+    name : str
+        название професии
+    salary : int
+        зарплата
+    area_name : str
+        название региона
+    published_at : str
+        дата публикации
+    currency_to_rub : dict
+        словарь перевода валюты в рубли
+    """
     currency_to_rub = {
         "AZN": 35.68,
         "BYR": 23.91,
@@ -25,6 +40,11 @@ class Vacancy:
     }
 
     def __init__(self, vac):
+        """
+        Инициализация объекта
+        :param vac: dict
+            вакансия
+        """
         self.name = vac['name']
         salary_from = int(float("".join(vac['salary_from'].split())))
         salary_to = int(float("".join(vac['salary_to'].split())))
@@ -34,15 +54,40 @@ class Vacancy:
 
 
 class DataSet:
+    """
+    Читает csv и заполняет список вакансий
+
+    Attributes
+    ----------
+    file_name: str
+        имя файла
+    vacancies_objects: list
+        список вакансий
+    """
     def __init__(self, file_name: str, vacancies_objects: list):
+        """
+        инициализация объекта
+        :param file_name: str
+            имя файла
+        :param vacancies_objects: str
+            список вакансий
+        """
         self.file_name = file_name
         self.vacancies_objects = vacancies_objects
 
     def fill_vacancies(self):
+        """
+        Читает вакансии и фильтрует их
+        """
         vacancies, list_naming = self.read_csv()
         self.vacancies_objects = self.csv_filer(vacancies, list_naming)
 
     def read_csv(self):
+        """
+        чтение csv файла
+        :return: (str[], str[])
+            значения(сами вакансии), заглавия(параметры)
+        """
         list_naming = []
         vacancies = []
         with open(self.file_name, encoding='utf-8-sig') as file:
@@ -60,6 +105,15 @@ class DataSet:
         return vacancies, list_naming
 
     def csv_filer(self, vacs, list_naming):
+        """
+        фильтрует вакансии
+        :param vacs: list
+            вакансии
+        :param list_naming: list
+            название полей
+        :return: list
+            итоговы список вакансий
+        """
         vacancies = list()
         for row in vacs:
             current = {}
@@ -70,7 +124,24 @@ class DataSet:
 
 
 class MyTuple:
+    """
+    Кастомный класс tuple
+
+    Attributes
+    ----------
+    totalSalary: int
+        зарплата
+    count: int
+        количество
+    """
     def __init__(self, salary: int, count: int):
+        """
+        инициализация объекта
+        :param salary: int
+            зарплата
+        :param count: int
+            количество
+        """
         self.totalSalary = salary
         self.count = count
 
@@ -79,6 +150,24 @@ class MyTuple:
 
 
 class InputConect:
+    """
+    класс ввода/вывода
+
+    Attributes
+    ----------
+    years: dict
+        словарь лет
+    cities: dict
+        словарь городов
+    vacancies: dict
+        словарь вакансий
+    file_name: str
+        название файла
+    profession: str
+        название профессии
+    city_count: int
+        количество городов
+    """
     years = {
     }
 
@@ -93,11 +182,19 @@ class InputConect:
     city_count = 0
 
     def start_input(self):
+        """
+        начинает пользовательский ввод
+        """
         self.file_name = input('Введите название файла: ')
         self.profession = input('Введите название профессии: ')
         self.city_count = 0
 
     def count_vacancies(self, vacancies: list):
+        """
+        заполняет словари для вакансий
+        :param vacancies: list
+            вакансии
+        """
         for vacancy in vacancies:
             self.city_count += 1
             year = int(vacancy.published_at.year)
@@ -119,6 +216,9 @@ class InputConect:
                 self.vacancies[year].count += 1
 
     def normalize_statistic(self):
+        """
+        обрабатывает статистику
+        """
         for year in self.years.keys():
             self.years[year].totalSalary = int(self.years[year].totalSalary // self.years[year].count)
 
@@ -138,6 +238,9 @@ class InputConect:
                 self.vacancies[year].totalSalary = int(self.vacancies[year].totalSalary // self.vacancies[year].count)
 
     def print_answer(self):
+        """
+        Печать ответа в консоль
+        """
         self.print_one("Динамика уровня зарплат по годам:", self.years, "totalSalary")
         self.print_one("Динамика количества вакансий по годам:", self.years, "count")
 
@@ -153,7 +256,18 @@ class InputConect:
         self.print_for_cities("Доля вакансий по городам (в порядке убывания):", self.cities,
                               cities_sorted, "count")
 
-    def print_for_cities(self, output: str, field: dict, names: list, value_name):
+    def print_for_cities(self, output: str, field: dict, names: list, value_name: str):
+        """
+        печать по городам
+        :param output: str
+            начало строки вывода
+        :param field: dict
+            Словарь, по которому нужно печатать статистику
+        :param names:
+            Названия городов
+        :param value_name:
+            название значения, которое нужно взять
+        """
         flag = False
         print(output, end='')
         index = 0
@@ -170,6 +284,15 @@ class InputConect:
             print('}')
 
     def print_one(self, output: str, field: dict, value_name: str):
+        """
+        Печатает одно свойство
+        :param output: str
+            начало строки вывода
+        :param field: dict
+            поле, которое нужно печатать
+        :param value_name: str
+            название значения, которое нужно взять
+        """
         flag = False
         print(output, end='')
         index = 0
@@ -187,6 +310,26 @@ class InputConect:
 
 
 class Report:
+    """
+    Класс для генерации файлов статистики
+
+    Attributes
+    ----------
+    years_salary: dict
+        динамика зарплат вакансий по году
+    years_count: dict
+        динамика количества вакансий по году
+    years_salary_vac: dict
+        динамика зарплаты для вакансии по году
+    years_count_vac: dict
+        динамика количества для вакансии по году
+    area_salary: dict
+        уровень зарплат по городам
+    area_count: dict
+        доля вакансий по городам
+    prof: dict
+        название професии
+    """
     years_salary = {}
     years_count = {}
     years_salary_vac = {}
@@ -196,14 +339,23 @@ class Report:
     prof = ''
 
     def years_preparer(self, field: dict, value_name: str, dest: dict):
+        """
+        подготовка словаря лет
+        """
         for year in field.keys():
             dest[year] = getattr(field[year], value_name)
 
     def citites_preparer(self, field: dict, names: list, value_name: str, dest: dict):
+        """
+        Подготовка словаря городов
+        """
         for name in names:
             dest[name] = getattr(field[name], value_name)
 
     def prepare_data(self, years: dict, vacancies: dict, cities: dict, prof: str):
+        """
+        Подготовка словарей для статистики
+        """
         self.years_preparer(years, "totalSalary", self.years_salary)
         self.years_preparer(years, "count", self.years_count)
         self.years_preparer(vacancies, "totalSalary", self.years_salary_vac)
@@ -223,6 +375,9 @@ class Report:
         return str(value)
 
     def generate_excel(self):
+        """
+        Генерация эксель таблицы
+        """
         wb = Workbook()
         del wb['Sheet']
         sheet = wb.create_sheet('Статистика по годам')
@@ -303,6 +458,9 @@ class Report:
         wb.save('report.xlsx')
 
     def generate_image(self):
+        """
+        Генерация картинки
+        """
         figure, axes = pyplot.subplots(2, 2)
         w = 0.4
         X_axis = np.arange(len(self.years_salary.keys()))
@@ -350,6 +508,9 @@ class Report:
         pyplot.show()
 
     def generate_pdf(self):
+        """
+        Генерация файла pdf
+        """
         area_count_dic = self.area_count.items()
         area_count_dic = {x[0]: str(f'{x[1] * 100:,.2f}%').replace('.', ',') for x in area_count_dic}
         env = Environment(loader=FileSystemLoader('.'))
@@ -371,15 +532,19 @@ class Report:
         pdfkit.from_string(pdf_template, 'report.pdf', configuration=config, options={"enable-local-file-access": None})
 
 
-inputer = InputConect()
-inputer.start_input()
-dataset = DataSet(inputer.file_name, list())
-dataset.fill_vacancies()
-inputer.count_vacancies(dataset.vacancies_objects)
-inputer.normalize_statistic()
-inputer.print_answer()
-reporter = Report()
-reporter.prepare_data(inputer.years, inputer.vacancies, inputer.cities, inputer.profession)
-reporter.generate_excel()
-reporter.generate_image()
-reporter.generate_pdf()
+def get_statistic():
+    """
+    Получение статистики, генерация excel таблицы, картинки и pdf файла
+    """
+    inputer = InputConect()
+    inputer.start_input()
+    dataset = DataSet(inputer.file_name, list())
+    dataset.fill_vacancies()
+    inputer.count_vacancies(dataset.vacancies_objects)
+    inputer.normalize_statistic()
+    inputer.print_answer()
+    reporter = Report()
+    reporter.prepare_data(inputer.years, inputer.vacancies, inputer.cities, inputer.profession)
+    reporter.generate_excel()
+    reporter.generate_image()
+    reporter.generate_pdf()
