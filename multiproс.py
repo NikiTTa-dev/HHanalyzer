@@ -3,6 +3,7 @@ import cProfile
 import os
 import pandas as pd
 import vacancies_parsing
+import concurrent.futures as con_fut
 
 
 class Statistic:
@@ -42,8 +43,8 @@ class Statistic:
         df["published_at"] = df["published_at"].apply(lambda s: int(s[:4]))
         df_vac = df[df["name"].str.contains(self.profession)]
 
-        return df["published_at"].values[0], [int(df["salary"].mean()), len(df), int(df_vac["salary"].mean()),
-                                              len(df_vac)]
+        return df["published_at"].values[0], [int(df["salary"].mean()), len(df),
+                                              int(df_vac["salary"].mean() if len(df_vac) != 0 else 0), len(df_vac)]
 
     def get_stat_by_city(self):
         """
@@ -87,10 +88,25 @@ class Statistic:
         """
         csv_file = [rf"Csvs\{file_name}" for file_name in os.listdir("Csvs")]
         pool = multiprocessing.Pool(4)
-        res_list = pool.starmap(self.get_stat_by_year, [(file,) for file in csv_file])
+        res = pool.starmap(self.get_stat_by_year, [(file,) for file in csv_file])
         pool.close()
 
-        for year, data_stat in res_list:
+        for year, data_stat in res:
+            self.years_salary[year] = data_stat[0]
+            self.years_count[year] = data_stat[1]
+            self.years_salary_vac[year] = data_stat[2]
+            self.years_count_vac[year] = data_stat[3]
+
+    def get_stat_by_year_concurrent(self):
+        """
+        Собирает статистику по годам, с использованием модуля concurrent
+        """
+        csv_file = [rf"Csvs\{file_name}" for file_name in os.listdir("Csvs")]
+        with con_fut.ProcessPoolExecutor(max_workers=4) as executor:
+            res = executor.map(self.get_stat_by_year, csv_file)
+        res = list(res)
+
+        for year, data_stat in res:
             self.years_salary[year] = data_stat[0]
             self.years_count[year] = data_stat[1]
             self.years_salary_vac[year] = data_stat[2]
@@ -114,5 +130,6 @@ if __name__ == '__main__':
     stat = Statistic(file_path, prof)
     stat.get_stat()
     stat.print_stat()
-    # cProfile.run("solve.get_stat_by_year_multi_on()", sort="cumtime")
-    # cProfile.run("solve.get_stat_by_year_multi_off()", sort="cumtime")
+    #cProfile.run("stat.get_stat_by_year_multi_on()", sort="cumtime")
+    #cProfile.run("stat.get_stat_by_year_multi_off()", sort="cumtime")
+    cProfile.run("stat.get_stat_by_year_concurrent()", sort="cumtime")
