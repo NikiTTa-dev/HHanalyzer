@@ -15,6 +15,3 @@ def parse_csv_by_year(file="Data\\vacancies_by_year.csv"):
     for year, data in df:
         data[["name", "salary_from", "salary_to", "salary_currency", "area_name", "published_at"]].to_csv(
             rf"Csvs\year_{year}.csv", index=False)
-
-
-parse_csv_by_year()
