@@ -132,4 +132,4 @@ if __name__ == '__main__':
     stat.print_stat()
     #cProfile.run("stat.get_stat_by_year_multi_on()", sort="cumtime")
     #cProfile.run("stat.get_stat_by_year_multi_off()", sort="cumtime")
-    cProfile.run("stat.get_stat_by_year_concurrent()", sort="cumtime")
+    #cProfile.run("stat.get_stat_by_year_concurrent()", sort="cumtime")
